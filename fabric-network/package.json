@@ -25,8 +25,8 @@
   },
   "types": "./types/index.d.ts",
   "dependencies": {
-	"fabric-common": "file:../fabric-common",
-	"fabric-protos": "file:../fabric-protos",
+    "fabric-common": "file:../fabric-common",
+    "fabric-protos": "file:../fabric-protos",
     "long": "^4.0.0",
     "nano": "^8.2.2"
   },

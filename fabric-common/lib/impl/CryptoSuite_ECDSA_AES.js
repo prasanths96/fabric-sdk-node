@@ -216,7 +216,8 @@ class CryptoSuite_ECDSA_AES extends CryptoSuite {
 		sig = _preventMalleability(sig, key._key.ecparams);
 		logger.debug('ecdsa signature: ', sig);
 		const der = sig.toDER();
-		return Buffer.from(der);
+
+		return Buffer.from(der); 
 	}
 
 	verify(key, signature, digest) {

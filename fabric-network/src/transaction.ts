@@ -121,6 +121,22 @@ export class Transaction {
 		this.transactionId = this.identityContext.transactionId;
 	}
 
+	async hash(msgBytes: Buffer): Promise<string> {
+
+		const gateway = this.contract.gateway
+		// Identity returned from gateway is always an object of type Identity
+		const identity = gateway.getIdentity()
+		const provider = this.gatewayOptions.wallet!.getProviderRegistry().getProvider(identity.type);
+		// const user = await provider.getUserContext(identity, 'gateway identity');
+		// const cryptoSuite = user.getCryptoSuite()
+		const cryptoSuite = provider.getCryptoSuite()
+		const hashFunction = cryptoSuite.hash.bind(cryptoSuite);
+	
+		// @ts-ignore
+		const digest = hashFunction(msgBytes, null);
+		return digest
+	}
+
 	/**
 	 * Get the fully qualified name of the transaction function.
 	 * @returns {string} Transaction name.
@@ -208,12 +224,13 @@ export class Transaction {
 	 * will be evaluated on the endorsing peers and then submitted to the ordering service
 	 * for committing to the ledger.
 	 * @async
+	 * @param {(msg: string) : Buffer} sign
 	 * @param {...string} [args] Transaction function arguments.
 	 * @returns {Buffer} Payload response from the transaction function.
 	 * @throws {module:fabric-network.TimeoutError} If the transaction was successfully submitted to the orderer but
 	 * timed out before a commit event was received from peers.
 	 */
-	async submit(...args: string[]): Promise<Buffer> {
+	async submit(sign: {(msg: string) : Promise<Buffer>}, ...args: string[]): Promise<Buffer> {
 		const method = `submit[${this.name}]`;
 		logger.debug('%s - start', method);
 
@@ -230,9 +247,12 @@ export class Transaction {
 
 		// build the outbound request along with getting a new transactionId
 		// from the identity context
-		endorsement.build(this.identityContext, proposalBuildRequest);
-
-		endorsement.sign(this.identityContext);
+		const proposalBytes = endorsement.build(this.identityContext, proposalBuildRequest);
+		const proposalHash = await this.hash(proposalBytes)
+		// Signing outside
+		const signatureBytes = await sign(proposalHash);
+		endorsement.sign(signatureBytes);
+		// endorsement.sign(this.identityContext);
 
 		// ------- S E N D   P R O P O S A L
 		// This is where the request gets sent to the peers
@@ -266,7 +286,7 @@ export class Transaction {
 		// by the send() of the proposal instance
 
 		const proposalResponse = await endorsement.send(proposalSendRequest);
-		try {
+		try { 
 			const result = getResponsePayload(proposalResponse);
 
 			// ------- E V E N T   M O N I T O R
@@ -274,8 +294,12 @@ export class Transaction {
 			await eventHandler.startListening();
 
 			const commit = endorsement.newCommit();
-			commit.build(this.identityContext);
-			commit.sign(this.identityContext);
+			const commitBytes = commit.build(this.identityContext);
+			const commitHash = await this.hash(commitBytes)
+			// Signing outside
+			const commitSignatureBytes = await sign(commitHash);
+			commit.sign(commitSignatureBytes);
+			// commit.sign(this.identityContext);
 
 			// -----  C O M M I T   E N D O R S E M E N T
 			// this is where the endorsement results are sent to the orderer
@@ -326,10 +350,11 @@ export class Transaction {
 	 * not be committed to the ledger.
 	 * This is used for querying the world state.
 	 * @async
+	 * @param {(msg: string) : Buffer} sign
 	 * @param {...string} [args] Transaction function arguments.
 	 * @returns {Promise<Buffer>} Payload response from the transaction function.
 	 */
-	async evaluate(...args: string[]): Promise<Buffer> {
+	async evaluate(sign: {(msg: string) : Promise<Buffer>}, ...args: string[]): Promise<Buffer> {
 		const method = `evaluate[${this.name}]`;
 		logger.debug('%s - start', method);
 
@@ -337,8 +362,12 @@ export class Transaction {
 		const request = this.newBuildProposalRequest(args);
 
 		logger.debug('%s - build and sign the query', method);
-		queryProposal.build(this.identityContext, request);
-		queryProposal.sign(this.identityContext);
+		const proposalBytes = queryProposal.build(this.identityContext, request);
+		const proposalHash = await this.hash(proposalBytes)
+		// queryProposal.sign(this.identityContext); // Original
+		// Signing outside
+		const signatureBytes = await sign(proposalHash);
+		queryProposal.sign(signatureBytes);
 
 		const query = new QueryImpl(queryProposal, this.gatewayOptions.queryHandlerOptions);
 
@@ -361,3 +390,4 @@ export class Transaction {
 		return request;
 	}
 }
+

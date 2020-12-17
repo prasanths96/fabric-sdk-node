@@ -66,7 +66,6 @@ class SigningIdentity extends Identity {
 		} else {
 			hashFunction = this._cryptoSuite.hash.bind(this._cryptoSuite);
 		}
-
 		const digest = hashFunction(msg);
 		return this._signer.sign(Buffer.from(digest, 'hex'), null);
 	}

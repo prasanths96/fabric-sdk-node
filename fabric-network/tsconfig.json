@@ -9,7 +9,8 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "es2017",
-		"forceConsistentCasingInFileNames": true
+		"forceConsistentCasingInFileNames": true,
+		"esModuleInterop": true,  // Added
 	},
 	"include": [
 		"src/"

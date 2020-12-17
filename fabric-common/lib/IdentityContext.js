@@ -88,6 +88,7 @@ const IdentityContext = class {
 		const signature = Buffer.from(signer.sign(payload));
 
 		logger.debug('%s - end', method);
+		
 		return signature;
 	}
 

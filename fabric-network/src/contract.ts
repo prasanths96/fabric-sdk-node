@@ -53,8 +53,8 @@ export interface Contract {
 	readonly chaincodeId: string;
 	readonly namespace: string;
 	createTransaction(name: string): Transaction;
-	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
+	evaluateTransaction(sign: {(msg: string) : Promise<Buffer>}, name: string, ...args: string[]): Promise<Buffer>;
+	submitTransaction(sign: {(msg: string) : Promise<Buffer>}, name: string, ...args: string[]): Promise<Buffer>;
 	addContractListener(listener: ContractListener, options?: ListenerOptions): Promise<ContractListener>;
 	removeContractListener(listener: ContractListener): void;
 	addDiscoveryInterest(interest: DiscoveryInterest): Contract;
@@ -209,12 +209,12 @@ export class ContractImpl {
 		return transaction;
 	}
 
-	async submitTransaction(name: string, ...args: string[]): Promise<Buffer> {
-		return this.createTransaction(name).submit(...args);
+	async submitTransaction(sign: {(msg: string) : Promise<Buffer>}, name: string, ...args: string[]): Promise<Buffer> {
+		return this.createTransaction(name).submit(sign, ...args);
 	}
 
-	async evaluateTransaction(name: string, ...args: string[]): Promise<Buffer> {
-		return this.createTransaction(name).evaluate(...args);
+	async evaluateTransaction(sign: {(msg: string) : Promise<Buffer>}, name: string, ...args: string[]): Promise<Buffer> {
+		return this.createTransaction(name).evaluate(sign, ...args);
 	}
 
 	async addContractListener(listener: ContractListener, options?: ListenerOptions): Promise<ContractListener> {
