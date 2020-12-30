@@ -84,7 +84,7 @@ const ServiceAction = class {
 		throw Error('"send" method must be implemented');
 	}
 
-	/*
+	/**
 	 * return a signed proposal from the signature and the payload as bytes
 	 *
 	 * This method is not intended for use by an application. It will be used
@@ -109,6 +109,57 @@ const ServiceAction = class {
 
 		return signedProposal;
 	}
+
+	/** 
+	 * Used for separting transaction generator and submitter.
+	 */
+	setProposal(proposal_bytes = checkParameter('proposal_bytes')) {
+		const method = `setProposal[${this.type}:${this.name}]`;
+		logger.debug('%s - start', method);
+
+		this._payload = proposal_bytes;
+
+		return this._payload;
+	}
+
+	/**
+	 * Used for separting transaction generator and submitter.
+	 */
+	setSignature(signature = checkParameter('signature') ) {
+		const method = `setSignedProposal[${this.type}:${this.name}]`;
+		logger.debug('%s - start', method);
+		
+		this._signature = signature;
+
+		return this._signature;
+	}
+
+	/**
+	* Used for separting transaction generator and submitter.
+	*/
+	getAction() {
+		const method = `getAction[${this.type}:${this.name}]`;
+		logger.debug('%s - start', method);
+
+		if (!this._action) {
+			throw new Error(method, ": _action is not set")
+		}
+
+		return this._action;
+	}
+
+	/*
+	 * Used for separting transaction generator and submitter.
+	 */
+	setAction(action = checkParameter('action') ) {
+		const method = `setAction[${this.type}:${this.name}]`;
+		logger.debug('%s - start', method);
+		
+		this._action = action;
+
+		return this._action;
+	}
+
 
 	/*
 	 * return a signed envelope from the signature and the payload as bytes

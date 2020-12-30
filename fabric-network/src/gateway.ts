@@ -33,6 +33,7 @@ export interface GatewayOptions {
 	eventHandlerOptions?: DefaultEventHandlerOptions;
 	queryHandlerOptions?: DefaultQueryHandlerOptions;
 	'connection-options'?: any;
+	identityContext?: IdentityContext,
 }
 
 export interface ConnectedGatewayOptions extends GatewayOptions {
@@ -253,7 +254,7 @@ export class Gateway {
 	 *     wallet: wallet
 	 * });
 	 */
-	async connect(config: Client | object, options: GatewayOptions) {
+	async connect(config: Client | object, options: GatewayOptions) { 
 		const method = 'connect';
 		logger.debug('%s - start', method);
 
@@ -301,7 +302,12 @@ export class Gateway {
 			const provider = options.identityProvider || IdentityProviderRegistry.newDefaultProviderRegistry().getProvider(this.identity.type);
 			const user = await provider.getUserContext(this.identity, 'gateway identity');
 			this.identityContext = this.client.newIdentityContext(user);
-		} else {
+		} else if (options.identityContext && typeof options.identity === 'object') {
+			// TODO Validation
+			this.identityContext = options.identityContext
+			this.identity = options.identity;
+		} 
+		else {
 			logger.error('%s - An identity must be assigned to a Gateway instance', method);
 			throw new Error('An identity must be assigned to a Gateway instance');
 		}

@@ -24,7 +24,7 @@ const logger = getLogger(TYPE);
  *
  * @class
  */
-const IdentityContext = class {
+const IdentityContext = class { 
 	/**
 	 * Construct a IdentityContext object.
 	 *
@@ -63,6 +63,16 @@ const IdentityContext = class {
 		logger.debug('%s - txid:%s', method, this.transactionId);
 
 		return this.clone();
+	}
+
+	setTransactionId(transactionId = checkParameter('transactionId')) {
+		this.transactionId = transactionId
+		return transactionId
+	}
+
+	setNonce(nonce = checkParameter('nonce')) {
+		this.nonce = nonce
+		return nonce
 	}
 
 	/**

@@ -404,7 +404,7 @@ message Endorsement {
 			logger.debug('%s - endorsing with a handler', method);
 			let results;
 			if (this.type === 'Query') {
-				results = await handler.query(signedEnvelope, request);
+				results = await handler.query(signedEnvelope, request); 
 			} else {
 				results = await handler.endorse(signedEnvelope, request);
 			}
@@ -476,6 +476,20 @@ message Endorsement {
 		}
 
 		return return_results;
+	}
+
+	/** 
+	 * Used for separting transaction generator and submitter.
+	 * @param {EndorsementResponse[]} proposal_responses options
+	 * @returns {EndorsementResponse[]} The same
+	 */
+	setProposalResponses(proposal_responses = checkParameter('proposal_responses')) {
+		const method = `setProposal[${this.type}:${this.name}]`;
+		logger.debug('%s - start', method);
+
+		this._proposalResponses = proposal_responses;
+
+		return this._proposalResponses;
 	}
 
 	/**

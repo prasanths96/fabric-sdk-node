@@ -53,12 +53,18 @@ export interface Contract {
 	readonly chaincodeId: string;
 	readonly namespace: string;
 	createTransaction(name: string): Transaction;
-	evaluateTransaction(sign: {(msg: string) : Promise<Buffer>}, name: string, ...args: string[]): Promise<Buffer>;
-	submitTransaction(sign: {(msg: string) : Promise<Buffer>}, name: string, ...args: string[]): Promise<Buffer>;
+	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
+	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	addContractListener(listener: ContractListener, options?: ListenerOptions): Promise<ContractListener>;
 	removeContractListener(listener: ContractListener): void;
 	addDiscoveryInterest(interest: DiscoveryInterest): Contract;
 	resetDiscoveryInterests(): Contract;
+
+	customSignSubmit(sign: {(msg: string) : Promise<Buffer>}, name: string, ...args: string[]): Promise<Buffer>;
+	customSignEvaluate(sign: {(msg: string) : Promise<Buffer>}, name: string, ...args: string[]): Promise<Buffer>;
+	evaluateBySignedEnvelope(proposalBytes: Buffer, signatureBytes: Buffer): Promise<Buffer>;
+	endorseBySignedEnvelope(proposalBytes: Buffer, signatureBytes: Buffer): Promise<Buffer>;
+	commitBySignedEnvelope(commitBytes: Buffer, signatureBytes: Buffer, transactionId: string): Promise<Buffer>
 }
 
 /**
@@ -191,7 +197,7 @@ export class ContractImpl {
 		const method = `constructor[${namespace}]`;
 		logger.debug('%s - start', method);
 
-		verifyNamespace(namespace);
+		verifyNamespace(namespace); 
 
 		this.network = network;
 		this.chaincodeId = chaincodeId;
@@ -202,19 +208,39 @@ export class ContractImpl {
 	}
 
 	createTransaction(name: string): Transaction {
-		verifyTransactionName(name);
+		verifyTransactionName(name); 
 		const qualifiedName = this._getQualifiedName(name);
 		const transaction = new Transaction(this, qualifiedName);
 
 		return transaction;
 	}
 
-	async submitTransaction(sign: {(msg: string) : Promise<Buffer>}, name: string, ...args: string[]): Promise<Buffer> {
-		return this.createTransaction(name).submit(sign, ...args);
+	async submitTransaction(name: string, ...args: string[]): Promise<Buffer> {
+		return this.createTransaction(name).submit(...args);
 	}
 
-	async evaluateTransaction(sign: {(msg: string) : Promise<Buffer>}, name: string, ...args: string[]): Promise<Buffer> {
-		return this.createTransaction(name).evaluate(sign, ...args);
+	async evaluateTransaction(name: string, ...args: string[]): Promise<Buffer> {
+		return this.createTransaction(name).evaluate(...args);
+	}
+
+	async customSignSubmit(sign: {(msg: string) : Promise<Buffer>}, name: string, ...args: string[]): Promise<Buffer> {
+		return this.createTransaction(name).customSignSubmit(sign, ...args);
+	}
+
+	async customSignEvaluate(sign: {(msg: string) : Promise<Buffer>}, name: string, ...args: string[]): Promise<Buffer> {
+		return this.createTransaction(name).customSignEvaluate(sign, ...args);
+	}
+
+	async evaluateBySignedEnvelope(proposalBytes: Buffer, signatureBytes: Buffer): Promise<Buffer> {
+		return this.createTransaction('generic').evaluateBySignedEnvelope(proposalBytes, signatureBytes);
+	}
+
+	async endorseBySignedEnvelope(proposalBytes: Buffer, signatureBytes: Buffer): Promise<Buffer> {
+		return this.createTransaction('generic').endorseBySignedEnvelope(proposalBytes, signatureBytes);
+	}
+
+	async commitBySignedEnvelope(commitBytes: Buffer, signatureBytes: Buffer, transactionId: string): Promise<Buffer> {
+		return this.createTransaction('generic').commitBySignedEnvelope(commitBytes, signatureBytes, transactionId);
 	}
 
 	async addContractListener(listener: ContractListener, options?: ListenerOptions): Promise<ContractListener> {

@@ -90,7 +90,7 @@ export interface ServiceError extends Error {
 }
 
 export interface ProposalResponse {
-	errors: ServiceError[];
+	errors: ServiceError[]; 
 	responses: EndorsementResponse[];
 	queryResults: Buffer[];
 }
@@ -192,6 +192,12 @@ export class ServiceAction {
 
 	public getSignedProposal(): any;
 	public getSignedEnvelope(): any;
+
+	public setProposal(proposal_bytes: Buffer): Buffer
+	public setSignature(signature: Buffer): Buffer
+
+	public getAction(): Object
+	public setAction(action: Object): Object
 }
 
 export interface CommitSendRequest {
@@ -243,6 +249,8 @@ export class Proposal extends ServiceAction {
 	public send(request?: SendProposalRequest): Promise<ProposalResponse>;
 	public verifyProposalResponse(proposalResponse?: any): boolean;
 	public compareProposalResponseResults(proposalResponses: any[]): boolean;
+
+	public setProposalResponses(proposal_responses: EndorsementResponse[]): EndorsementResponse[];
 }
 
 export class DiscoveryService extends ServiceAction {
@@ -401,6 +409,8 @@ export class IdentityContext {
 	calculateTransactionId(): IdentityContext;
 	serializeIdentity(): Buffer;
 	sign(payload: Buffer): Buffer;
+	setNonce(nonce: Buffer): Buffer;
+	setTransactionId(transactionId: string): string;
 }
 
 export interface BlockData {
